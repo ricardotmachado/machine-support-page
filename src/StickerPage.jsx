@@ -27,7 +27,7 @@ const DEMO_MACHINES = [
 
 export default function StickerPage({ onBack }) {
   const [selected, setSelected] = useState(DEMO_MACHINES[0].id)
-  const [baseUrl, setBaseUrl] = useState('https://suporte.wac.com.br')
+  const [baseUrl, setBaseUrl] = useState('https://thankful-field-0ed015510.4.azurestaticapps.net')
   const machine = DEMO_MACHINES.find(m => m.id === selected)
 
   return (

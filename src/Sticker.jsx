@@ -16,7 +16,7 @@ function WrenchIcon({ size = 14, color = 'currentColor' }) {
   )
 }
 
-export function Sticker({ machine, baseUrl = 'https://suporte.wac.com.br' }) {
+export function Sticker({ machine, baseUrl = 'https://thankful-field-0ed015510.4.azurestaticapps.net' }) {
   const url = `${baseUrl}/machine/${machine.id}`
   // Unique IDs per machine to avoid SVG pattern conflicts in multi-sticker print sheets
   const gridId = `grid-${machine.id}`

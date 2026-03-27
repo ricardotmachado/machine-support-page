@@ -253,9 +253,9 @@ test.describe('Direct Contact Section', () => {
     await expect(waLink).toBeVisible()
   })
 
-  test('email link points to ricardojtmachado@hotmail.com', async ({ page }) => {
+  test('email link points to rui.freitas@wac.pt', async ({ page }) => {
     await page.goto(URL)
-    const emailLink = page.locator('a[href*="ricardojtmachado@hotmail.com"]').last()
+    const emailLink = page.locator('a[href*="rui.freitas@wac.pt"]').last()
     await expect(emailLink).toBeVisible()
   })
 })

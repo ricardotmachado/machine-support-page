@@ -19,7 +19,7 @@ const MACHINE = {
 
 const COMPANY = {
   name: 'WAC - Equipamentos Industriais',
-  email: 'ricardojtmachado@hotmail.com',
+  email: 'rui.freitas@wac.pt',
   whatsapp: '351913882119',
 }
 

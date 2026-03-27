@@ -367,9 +367,7 @@ export default function App() {
         <div className="absolute top-0 left-0 right-0 pt-5">
           <div className="max-w-5xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                <IcoWrench cls="w-4 h-4 text-white" />
-              </div>
+              <img src="/wac-logo.png" alt="WAC" className="w-8 h-8 rounded-xl object-cover shadow-lg flex-shrink-0" />
               <div>
                 <p className="text-white text-xs font-semibold tracking-wide leading-none">{COMPANY.name}</p>
                 <p className="text-slate-400 text-[10px] mt-0.5 leading-none">{MACHINE.location}</p>

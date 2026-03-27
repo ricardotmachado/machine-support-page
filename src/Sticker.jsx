@@ -70,16 +70,12 @@ export function Sticker({ machine, baseUrl = 'https://thankful-field-0ed015510.4
         display: 'flex', alignItems: 'center',
         padding: '0 10px', gap: 6,
       }}>
-        {/* Icon + brand */}
-        <div style={{
-          width: 18, height: 18, borderRadius: 4,
-          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-          boxShadow: '0 0 8px rgba(59,130,246,0.4)',
-        }}>
-          <WrenchIcon size={10} color="#fff" />
-        </div>
+        {/* Logo */}
+        <img
+          src="/wac-logo.png"
+          alt="WAC"
+          style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+        />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <span style={{ color: '#f1f5f9', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', lineHeight: 1 }}>

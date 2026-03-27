@@ -44,6 +44,7 @@ export default function StickerPage({ onBack }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
+          <img src="/wac-logo.png" alt="WAC" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
           <div>
             <h1 className="text-sm font-bold leading-tight">Gerador de Etiquetas</h1>
             <p className="text-slate-400 text-xs">WAC - Equipamentos Industriais</p>

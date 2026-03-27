@@ -8,7 +8,7 @@ const MACHINE = {
   serial: 'LCOB2004A',
   year: '2021',
   client: 'Euromolding',
-  location: 'Zona Industrial de Ourém — Rua B, Lote 5, 2435-661 Seiça',
+  location: 'Ourém',
   installDate: '2021-01-01',
   lastMaintenance: '2025-06-10',
   nextMaintenance: '2026-06-10',

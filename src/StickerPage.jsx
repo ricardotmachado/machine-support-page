@@ -7,7 +7,7 @@ const DEMO_MACHINES = [
     name: 'Costa Levigatrici B71RRFF1350',
     model: 'B71RRFF1350',
     serial: 'LCOB2004A',
-    location: 'Zona Industrial de Ourém — Seiça',
+    location: 'Ourém',
   },
   {
     id: 'MCH-2024-0017',

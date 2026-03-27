@@ -77,6 +77,7 @@ app.http('submitOccurrence', {
       await resend.emails.send({
         from: 'WAC Suporte <onboarding@resend.dev>',
         to: [process.env.NOTIFY_EMAIL],
+        cc: process.env.CC_EMAIL ? [process.env.CC_EMAIL] : undefined,
         subject: `[${ref}] ${urgencyLabel === 'Urgente' ? '🚨 ' : ''}Nova Ocorrência — ${machineName ?? machineId}`,
         html,
       })

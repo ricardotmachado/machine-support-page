@@ -176,8 +176,17 @@ function InfoRow({ Icon, label, value, mono = false }) {
 
 // ─── Success Screen ───────────────────────────────────────────────────────────
 
-function SuccessScreen({ refCode, urgency, onReset }) {
+function SuccessScreen({ refCode, urgency, issueLabel, operatorName, description, onReset }) {
   const urgencyItem = URGENCY.find(u => u.value === urgency)
+
+  const waMsg = encodeURIComponent(
+    `*NOVA OCORRÊNCIA — ${MACHINE.name}*\n` +
+    `Código: ${refCode}\n` +
+    `Problema: ${issueLabel}\n` +
+    `Urgência: ${urgencyItem?.label}\n` +
+    `Operador: ${operatorName}\n\n` +
+    `${description}`
+  )
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-12">
@@ -193,12 +202,12 @@ function SuccessScreen({ refCode, urgency, onReset }) {
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Ocorrência Registada!</h2>
           <p className="text-slate-500 text-sm leading-relaxed">
-            O seu pedido foi enviado. Notifique a equipa diretamente para resposta imediata.
+            A equipa foi notificada. Pode também enviar via WhatsApp para resposta imediata.
           </p>
         </div>
 
         {/* Ref card */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 mb-5 text-center shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 mb-4 text-center shadow-sm">
           <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-2">Código da Ocorrência</p>
           <p className="text-3xl font-mono font-bold text-slate-900 tracking-widest mb-3">{refCode}</p>
           <div className="flex items-center justify-center gap-2">
@@ -215,7 +224,7 @@ function SuccessScreen({ refCode, urgency, onReset }) {
         </div>
 
         {/* Email sent notice */}
-        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-2">
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-4">
           <EmailIcon cls="w-5 h-5 text-blue-600 flex-shrink-0" />
           <div>
             <p className="text-xs font-bold text-blue-800">Equipa notificada por e-mail</p>
@@ -225,6 +234,15 @@ function SuccessScreen({ refCode, urgency, onReset }) {
 
         {/* CTAs */}
         <div className="space-y-3">
+          <a
+            href={`https://wa.me/${COMPANY.whatsapp}?text=${waMsg}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2.5 w-full py-4 rounded-2xl bg-[#25D366] hover:bg-[#1fba5a] active:scale-[0.98] text-white font-bold text-sm transition-all shadow-sm shadow-green-200"
+          >
+            <WhatsAppIcon cls="w-5 h-5" />
+            Enviar também por WhatsApp
+          </a>
           <button
             onClick={onReset}
             className="w-full py-3.5 rounded-2xl border-2 border-slate-200 text-slate-600 hover:bg-slate-100 font-semibold text-sm transition-colors"
@@ -304,6 +322,9 @@ export default function App() {
       <SuccessScreen
         refCode={refCode}
         urgency={sentForm.urgency}
+        issueLabel={sentForm.issueLabel}
+        operatorName={sentForm.operatorName}
+        description={sentForm.description}
         onReset={() => {
           setSubmitted(false)
           setSentForm(null)

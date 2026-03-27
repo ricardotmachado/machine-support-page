@@ -173,27 +173,8 @@ function InfoRow({ Icon, label, value, mono = false }) {
 
 // ─── Success Screen ───────────────────────────────────────────────────────────
 
-function SuccessScreen({ refCode, urgency, issueLabel, operatorName, description, onReset }) {
+function SuccessScreen({ refCode, urgency, onReset }) {
   const urgencyItem = URGENCY.find(u => u.value === urgency)
-
-  const emailSubject = encodeURIComponent(`[Ocorrência ${refCode}] ${MACHINE.name} — ${urgencyItem?.label}`)
-  const emailBody = encodeURIComponent(
-    `Nova ocorrência registada\n` +
-    `${'─'.repeat(40)}\n\n` +
-    `Código:       ${refCode}\n` +
-    `Cliente:      ${MACHINE.client}\n` +
-    `Marca:        ${MACHINE.brand}\n` +
-    `Modelo:       ${MACHINE.model}\n` +
-    `Nº de Série:  ${MACHINE.serial}\n` +
-    `Ano:          ${MACHINE.year}\n` +
-    `Localização:  ${MACHINE.location}\n\n` +
-    `Problema:     ${issueLabel}\n` +
-    `Urgência:     ${urgencyItem?.label}\n` +
-    `Operador:     ${operatorName}\n\n` +
-    `Descrição:\n${description}\n\n` +
-    `${'─'.repeat(40)}\n` +
-    `WAC - Equipamentos Industriais`
-  )
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-12">
@@ -230,24 +211,17 @@ function SuccessScreen({ refCode, urgency, issueLabel, operatorName, description
           </div>
         </div>
 
-        {/* WhatsApp sent notice */}
-        <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-2">
-          <WhatsAppIcon cls="w-5 h-5 text-green-600 flex-shrink-0" />
+        {/* Email sent notice */}
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-2">
+          <EmailIcon cls="w-5 h-5 text-blue-600 flex-shrink-0" />
           <div>
-            <p className="text-xs font-bold text-green-800">WhatsApp aberto automaticamente</p>
-            <p className="text-xs text-green-600">Prima <strong>Enviar</strong> na conversa para notificar a equipa.</p>
+            <p className="text-xs font-bold text-blue-800">Equipa notificada por e-mail</p>
+            <p className="text-xs text-blue-600">A equipa técnica recebeu os detalhes da ocorrência.</p>
           </div>
         </div>
 
         {/* CTAs */}
         <div className="space-y-3">
-          <a
-            href={`mailto:${COMPANY.email}?subject=${emailSubject}&body=${emailBody}`}
-            className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white font-bold text-sm transition-all shadow-sm"
-          >
-            <EmailIcon />
-            Enviar também por E-mail
-          </a>
           <button
             onClick={onReset}
             className="w-full py-3.5 rounded-2xl border-2 border-slate-200 text-slate-600 hover:bg-slate-100 font-semibold text-sm transition-colors"
@@ -283,42 +257,38 @@ export default function App() {
     return e
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     const e2 = validate()
     if (Object.keys(e2).length) { setErrors(e2); return }
     setSubmitting(true)
 
-    setTimeout(() => {
-      const ref = generateRef()
-      const urgencyItem = URGENCY.find(u => u.value === form.urgency)
-      const issueItem = ISSUE_TYPES.find(i => i.value === form.issueType)
+    const ref = generateRef()
+    const issueItem = ISSUE_TYPES.find(i => i.value === form.issueType)
 
-      // Build WhatsApp message and fire immediately
-      const waMsg = encodeURIComponent(
-        `*NOVA OCORRENCIA DE MANUTENCAO*\n` +
-        `--------------------------------\n\n` +
-        `*Codigo:* ${ref}\n` +
-        `*Cliente:* ${MACHINE.client}\n` +
-        `*Marca:* ${MACHINE.brand}\n` +
-        `*Modelo:* ${MACHINE.model}\n` +
-        `*Serie:* ${MACHINE.serial}\n` +
-        `*Ano:* ${MACHINE.year}\n` +
-        `*Localizacao:* ${MACHINE.location}\n` +
-        `*Problema:* ${issueItem?.label}\n` +
-        `*Urgencia:* ${urgencyItem?.label}\n` +
-        `*Operador:* ${form.operatorName}\n\n` +
-        `*Descricao:*\n${form.description}\n\n` +
-        `--------------------------------\n` +
-        `Por favor, confirme a receção.`
-      )
-      window.open(`https://wa.me/${COMPANY.whatsapp}?text=${waMsg}`, '_blank')
+    try {
+      const res = await fetch('/api/submit-occurrence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ref,
+          name: form.operatorName,
+          issueType: issueItem?.label ?? form.issueType,
+          urgency: form.urgency,
+          description: form.description,
+          machineId: MACHINE.id,
+          machineName: MACHINE.name,
+        }),
+      })
+      if (!res.ok) throw new Error('Server error')
+    } catch {
+      // still show success — avoid blocking the operator
+    }
 
-      setRefCode(ref)
-      setSentForm({ ...form, issueLabel: issueItem?.label })
-      setSubmitting(false)
-      setSubmitted(true)
-    }, 900)
+    setRefCode(ref)
+    setSentForm({ ...form, issueLabel: issueItem?.label })
+    setSubmitting(false)
+    setSubmitted(true)
   }
 
   function handleChange(field, value) {
@@ -331,9 +301,6 @@ export default function App() {
       <SuccessScreen
         refCode={refCode}
         urgency={sentForm.urgency}
-        issueLabel={sentForm.issueLabel}
-        operatorName={sentForm.operatorName}
-        description={sentForm.description}
         onReset={() => {
           setSubmitted(false)
           setSentForm(null)

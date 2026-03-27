@@ -5,12 +5,17 @@ import App from './App.jsx'
 import StickerPage from './StickerPage.jsx'
 
 function Root() {
+  const isMachinePath = /^\/machine\//.test(window.location.pathname)
   const [view, setView] = useState(
     window.location.hash === '#sticker' ? 'sticker' : 'app'
   )
 
   if (view === 'sticker') {
     return <StickerPage onBack={() => { window.location.hash = ''; setView('app') }} />
+  }
+
+  if (isMachinePath) {
+    return <App />
   }
 
   return (

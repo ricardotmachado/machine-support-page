@@ -1,21 +1,4 @@
-import { useState } from 'react'
-
-const MACHINE = {
-  id: 'ERM-2021-001',
-  name: 'Costa Levigatrici B71RRFF1350',
-  brand: 'Costa Levigatrici',
-  model: 'B71RRFF1350',
-  serial: 'LCOB2004A',
-  year: '2021',
-  client: 'Euromolding',
-  location: 'Ourém',
-  installDate: '2021-01-01',
-  lastMaintenance: '2025-06-10',
-  nextMaintenance: '2026-06-10',
-  technician: 'Ricardo Capitão',
-  status: 'operational',
-  image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80',
-}
+import { useState, useEffect } from 'react'
 
 const COMPANY = {
   name: 'WAC - Equipamentos Industriais',
@@ -261,7 +244,10 @@ function SuccessScreen({ refCode, urgency, issueLabel, operatorName, description
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
-export default function App() {
+export default function App({ stickerId }) {
+  const [machine, setMachine] = useState(null)
+  const [machineLoading, setMachineLoading] = useState(true)
+  const [machineNotFound, setMachineNotFound] = useState(false)
   const [form, setForm] = useState({ operatorName: '', issueType: '', urgency: 'medium', description: '' })
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -269,6 +255,14 @@ export default function App() {
   const [refCode, setRefCode] = useState('')
   const [sentForm, setSentForm] = useState(null)
   const [imgError, setImgError] = useState(false)
+
+  useEffect(() => {
+    if (!stickerId) { setMachineLoading(false); setMachineNotFound(true); return }
+    fetch(`/api/machine/${stickerId}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => { setMachine(data); setMachineLoading(false) })
+      .catch(() => { setMachineNotFound(true); setMachineLoading(false) })
+  }, [stickerId])
 
   function validate() {
     const e = {}
@@ -297,8 +291,9 @@ export default function App() {
           issueType: issueItem?.label ?? form.issueType,
           urgency: form.urgency,
           description: form.description,
-          machineId: MACHINE.id,
-          machineName: MACHINE.name,
+          machineId: machine?.id,
+          machineName: machine?.name,
+          stickerId,
         }),
       })
       if (!res.ok) throw new Error('Server error')
@@ -315,6 +310,25 @@ export default function App() {
   function handleChange(field, value) {
     setForm(f => ({ ...f, [field]: value }))
     setErrors(er => ({ ...er, [field]: undefined }))
+  }
+
+  if (machineLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <IcoSpinner cls="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    )
+  }
+
+  if (machineNotFound) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 text-center">
+        <img src="/wac-logo.png" alt="WAC" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-6 shadow-md" />
+        <h2 className="text-xl font-bold text-slate-800 mb-2">Sticker não registado</h2>
+        <p className="text-slate-500 text-sm max-w-xs">Este código QR ainda não está associado a nenhuma máquina. Contacte a equipa WAC.</p>
+        <p className="text-xs text-slate-400 font-mono mt-4">{stickerId}</p>
+      </div>
+    )
   }
 
   if (submitted) {
@@ -335,12 +349,12 @@ export default function App() {
   }
 
   const infoRows = [
-    { Icon: IcoTag,      label: 'Marca',               value: MACHINE.brand },
-    { Icon: IcoTag,      label: 'Modelo',              value: MACHINE.model },
-    { Icon: IcoHash,     label: 'Nº de Série',          value: MACHINE.serial, mono: true },
-    { Icon: IcoHash,     label: 'Ano de Fabrico',       value: MACHINE.year },
-    { Icon: IcoUser,     label: 'Técnico Responsável',  value: MACHINE.technician },
-    { Icon: IcoCalendar, label: 'Instalação',           value: formatDate(MACHINE.installDate) },
+    { Icon: IcoTag,      label: 'Marca',               value: machine.brand },
+    { Icon: IcoTag,      label: 'Modelo',              value: machine.model },
+    { Icon: IcoHash,     label: 'Nº de Série',          value: machine.serial, mono: true },
+    { Icon: IcoHash,     label: 'Ano de Fabrico',       value: machine.year },
+    { Icon: IcoUser,     label: 'Técnico Responsável',  value: machine.technician },
+    { Icon: IcoCalendar, label: 'Instalação',           value: formatDate(machine.install_date) },
   ]
 
   return (
@@ -348,10 +362,10 @@ export default function App() {
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <div className="relative h-72 md:h-96 w-full overflow-hidden">
-        {!imgError ? (
+        {!imgError && machine.image ? (
           <img
-            src={MACHINE.image}
-            alt={MACHINE.name}
+            src={machine.image}
+            alt={machine.name}
             className="w-full h-full object-cover"
             onError={() => setImgError(true)}
           />
@@ -370,10 +384,10 @@ export default function App() {
               <img src="/wac-logo.png" alt="WAC" className="w-8 h-8 rounded-xl object-cover shadow-lg flex-shrink-0" />
               <div>
                 <p className="text-white text-xs font-semibold tracking-wide leading-none">{COMPANY.name}</p>
-                <p className="text-slate-400 text-[10px] mt-0.5 leading-none">{MACHINE.location}</p>
+                <p className="text-slate-400 text-[10px] mt-0.5 leading-none">{machine.location}</p>
               </div>
             </div>
-            <StatusBadge status={MACHINE.status} />
+            <StatusBadge status={machine.status} />
           </div>
         </div>
 
@@ -381,11 +395,11 @@ export default function App() {
         <div className="absolute bottom-0 left-0 right-0 pb-6">
           <div className="max-w-5xl mx-auto px-4">
             <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1 opacity-80">Equipamento</p>
-            <h1 className="text-white text-3xl md:text-4xl font-bold leading-tight">{MACHINE.name}</h1>
+            <h1 className="text-white text-3xl md:text-4xl font-bold leading-tight">{machine.name}</h1>
             <p className="text-slate-400 text-xs mt-1.5">
-              <span className="font-mono">{MACHINE.id}</span>
+              <span className="font-mono">{stickerId}</span>
               <span className="mx-1.5 opacity-40">·</span>
-              <span>{MACHINE.client}</span>
+              <span>{machine.client}</span>
             </p>
           </div>
         </div>
@@ -542,7 +556,7 @@ export default function App() {
               <p className="text-xs text-slate-400 mb-4">Fale connosco directamente sem preencher o formulário.</p>
               <div className="grid grid-cols-3 gap-3">
                 <a
-                  href={`https://wa.me/${COMPANY.whatsapp}?text=${encodeURIComponent('Olá! Preciso de suporte técnico para o equipamento ' + MACHINE.id + ' — ' + MACHINE.name)}`}
+                  href={`https://wa.me/${COMPANY.whatsapp}?text=${encodeURIComponent('Olá! Preciso de suporte técnico para o equipamento ' + stickerId + ' — ' + machine.name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2.5 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#1fba5a] active:scale-[0.98] text-white text-sm font-bold transition-all shadow-sm shadow-green-200"
@@ -558,7 +572,7 @@ export default function App() {
                   Telefone
                 </a>
                 <a
-                  href={`mailto:${COMPANY.email}?subject=${encodeURIComponent('[Suporte] ' + MACHINE.id + ' — ' + MACHINE.name)}`}
+                  href={`mailto:${COMPANY.email}?subject=${encodeURIComponent('[Suporte] ' + stickerId + ' — ' + machine.name)}`}
                   className="flex items-center justify-center gap-2.5 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white text-sm font-bold transition-all shadow-sm"
                 >
                   <EmailIcon cls="w-4 h-4" />

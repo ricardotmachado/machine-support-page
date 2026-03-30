@@ -1,5 +1,6 @@
 const { app } = require('@azure/functions')
 const { Resend } = require('resend')
+const { getClient } = require('../lib/supabase')
 
 app.http('submitOccurrence', {
   methods: ['POST'],
@@ -13,7 +14,7 @@ app.http('submitOccurrence', {
       return { status: 400, jsonBody: { error: 'Invalid JSON' } }
     }
 
-    const { name, issueType, urgency, description, machineId, machineName } = body
+    const { name, issueType, urgency, description, machineId, machineName, stickerId } = body
 
     if (!name || !issueType || !description) {
       return { status: 400, jsonBody: { error: 'Missing required fields' } }
@@ -71,6 +72,23 @@ app.http('submitOccurrence', {
         </div>
       </div>
     `
+
+    // Save to database
+    try {
+      const supabase = getClient()
+      await supabase.from('occurrences').insert([{
+        ref_code: ref,
+        machine_id: machineId ?? null,
+        sticker_code: stickerId ?? null,
+        operator_name: name,
+        issue_type: issueType,
+        urgency,
+        description,
+        status: 'open',
+      }])
+    } catch (err) {
+      context.error('DB insert failed:', err)
+    }
 
     try {
       const resend = new Resend(process.env.RESEND_API_KEY)

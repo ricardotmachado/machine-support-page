@@ -3,35 +3,34 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import StickerPage from './StickerPage.jsx'
+import AdminPage from './pages/AdminPage.jsx'
 
 function Root() {
-  const isMachinePath = /^\/machine\//.test(window.location.pathname)
-  const [view, setView] = useState(
-    window.location.hash === '#sticker' ? 'sticker' : 'app'
-  )
+  const path = window.location.pathname
+  const hash = window.location.hash
 
-  if (view === 'sticker') {
-    return <StickerPage onBack={() => { window.location.hash = ''; setView('app') }} />
+  // /admin → backoffice
+  if (path === '/admin' || path.startsWith('/admin/')) {
+    return <AdminPage />
   }
 
-  if (isMachinePath) {
-    return <App />
+  // /#sticker → sticker generator
+  if (hash === '#sticker') {
+    return <StickerPage onBack={() => { window.location.hash = ''; window.location.reload() }} />
   }
 
+  // /machine/:stickerId → dynamic machine page
+  const machineMatch = path.match(/^\/machine\/(.+)$/)
+  if (machineMatch) {
+    return <App stickerId={machineMatch[1]} />
+  }
+
+  // / → redirect to admin (no public homepage without a sticker)
   return (
-    <div>
-      <App />
-      {/* Admin link — hidden in production, visible for internal use */}
-      <div className="fixed bottom-4 right-4 no-print">
-        <button
-          onClick={() => { window.location.hash = 'sticker'; setView('sticker') }}
-          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-lg transition-colors opacity-60 hover:opacity-100"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-          </svg>
-          Etiquetas
-        </button>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="text-center">
+        <img src="/wac-logo.png" alt="WAC" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4 shadow-md" />
+        <p className="text-slate-500 text-sm">Digitalize o código QR da máquina para continuar.</p>
       </div>
     </div>
   )

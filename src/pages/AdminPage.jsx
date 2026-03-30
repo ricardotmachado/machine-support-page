@@ -187,10 +187,14 @@ export default function AdminPage() {
   const [view, setView] = useState('list') // list | create | edit
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
-  const [assigning, setAssigning] = useState(null) // machine being sticker-assigned
+  const [assigning, setAssigning] = useState(null)
+  const [toast, setToast] = useState(null)
 
   function login() { sessionStorage.setItem('wac-admin', '1'); setAuthed(true) }
-  function logout() { sessionStorage.removeItem('wac-admin'); setAuthed(false) }
+  function logout() {
+    if (!window.confirm('Tem a certeza que deseja sair?')) return
+    sessionStorage.removeItem('wac-admin'); setAuthed(false)
+  }
 
   async function loadMachines() {
     setLoading(true)
@@ -201,6 +205,11 @@ export default function AdminPage() {
 
   useEffect(() => { if (authed) loadMachines() }, [authed])
 
+  function showToast(msg) {
+    setToast(msg)
+    setTimeout(() => setToast(null), 3000)
+  }
+
   async function handleCreate(form) {
     setSaving(true)
     const res = await fetch('/api/machines/create', {
@@ -208,7 +217,8 @@ export default function AdminPage() {
       headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
       body: JSON.stringify(form),
     })
-    if (res.ok) { await loadMachines(); setView('list') }
+    if (res.ok) { await loadMachines(); setView('list'); showToast('Máquina criada com sucesso!') }
+    else showToast('Erro ao criar máquina.')
     setSaving(false)
   }
 
@@ -219,7 +229,8 @@ export default function AdminPage() {
       headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
       body: JSON.stringify(form),
     })
-    if (res.ok) { await loadMachines(); setView('list'); setEditing(null) }
+    if (res.ok) { await loadMachines(); setView('list'); setEditing(null); showToast('Alterações guardadas!') }
+    else showToast('Erro ao guardar alterações.')
     setSaving(false)
   }
 
@@ -227,6 +238,15 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 bg-slate-900 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in">
+          <svg className="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+          {toast}
+        </div>
+      )}
       {/* Header */}
       <div className="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -236,7 +256,12 @@ export default function AdminPage() {
             <p className="text-slate-400 text-xs">Gestão de Máquinas</p>
           </div>
         </div>
-        <button onClick={logout} className="text-slate-400 hover:text-white text-xs transition-colors">Sair</button>
+        <button onClick={logout} className="flex items-center gap-1.5 text-slate-400 hover:text-white text-xs transition-colors">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Sair
+        </button>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -253,12 +278,25 @@ export default function AdminPage() {
             </div>
 
             {loading ? (
-              <p className="text-slate-400 text-sm text-center py-12">A carregar…</p>
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <svg className="w-6 h-6 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                <p className="text-slate-400 text-sm">A carregar máquinas…</p>
+              </div>
             ) : machines.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-slate-500 text-sm mb-2">Nenhuma máquina registada.</p>
-                <button onClick={() => setView('create')} className="text-blue-600 text-sm font-semibold hover:underline">
-                  Criar a primeira máquina
+              <div className="text-center py-20">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+                  </svg>
+                </div>
+                <p className="text-slate-700 font-semibold mb-1">Nenhuma máquina registada</p>
+                <p className="text-slate-400 text-sm mb-5">Crie a primeira máquina para começar a associar stickers QR.</p>
+                <button onClick={() => setView('create')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm transition-colors">
+                  + Criar primeira máquina
                 </button>
               </div>
             ) : (
@@ -266,30 +304,40 @@ export default function AdminPage() {
                 {machines.map(m => {
                   const sticker = m.sticker_assignments?.[0]?.sticker_code
                   return (
-                    <div key={m.id} className="bg-white rounded-xl border border-slate-100 p-4 flex items-center gap-4 shadow-sm">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-semibold text-slate-900 text-sm truncate">{m.name}</p>
-                          <StatusPill status={m.status} />
+                    <div key={m.id} className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <p className="font-bold text-slate-900 text-sm">{m.name}</p>
+                            <StatusPill status={m.status} />
+                            {!sticker && (
+                              <span className="text-xs bg-amber-50 text-amber-600 border border-amber-200 font-semibold px-2 py-0.5 rounded-full">Sem QR</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mt-1">
+                            {m.client && <span>{m.client}</span>}
+                            {m.location && <><span>·</span><span>{m.location}</span></>}
+                            {m.technician && <><span>·</span><span>{m.technician}</span></>}
+                          </div>
+                          {sticker && (
+                            <div className="mt-2 inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-mono px-2.5 py-1 rounded-lg">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5a.5.5 0 11-1 0 .5.5 0 011 0zM6.5 8.5a.5.5 0 11-1 0 .5.5 0 011 0z" />
+                              </svg>
+                              QR: {sticker}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-slate-400">
-                          {m.client && <span>{m.client}</span>}
-                          {m.location && <span>· {m.location}</span>}
-                          {sticker
-                            ? <span className="font-mono text-blue-500">· QR: {sticker}</span>
-                            : <span className="text-amber-500">· Sem sticker</span>
-                          }
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button onClick={() => setAssigning(m)}
+                            className="text-xs border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                            {sticker ? 'Reatribuir QR' : 'Atribuir QR'}
+                          </button>
+                          <button onClick={() => { setEditing(m); setView('edit') }}
+                            className="text-xs bg-slate-900 hover:bg-slate-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                            Editar
+                          </button>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button onClick={() => setAssigning(m)}
-                          className="text-xs border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                          {sticker ? 'Reatribuir QR' : 'Atribuir QR'}
-                        </button>
-                        <button onClick={() => { setEditing(m); setView('edit') }}
-                          className="text-xs bg-slate-900 hover:bg-slate-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                          Editar
-                        </button>
                       </div>
                     </div>
                   )

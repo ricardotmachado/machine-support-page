@@ -159,11 +159,11 @@ function InfoRow({ Icon, label, value, mono = false }) {
 
 // ─── Success Screen ───────────────────────────────────────────────────────────
 
-function SuccessScreen({ refCode, urgency, issueLabel, operatorName, description, onReset }) {
+function SuccessScreen({ refCode, urgency, issueLabel, operatorName, description, machineName, stickerId, onReset }) {
   const urgencyItem = URGENCY.find(u => u.value === urgency)
 
   const waMsg = encodeURIComponent(
-    `*NOVA OCORRÊNCIA — ${MACHINE.name}*\n` +
+    `*NOVA OCORRÊNCIA — ${machineName}*\n` +
     `Código: ${refCode}\n` +
     `Problema: ${issueLabel}\n` +
     `Urgência: ${urgencyItem?.label}\n` +
@@ -194,7 +194,7 @@ function SuccessScreen({ refCode, urgency, issueLabel, operatorName, description
           <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-2">Código da Ocorrência</p>
           <p className="text-3xl font-mono font-bold text-slate-900 tracking-widest mb-3">{refCode}</p>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-xs text-slate-400 font-mono">{MACHINE.id}</span>
+            <span className="text-xs text-slate-400 font-mono">{stickerId}</span>
             <span className="text-slate-300">·</span>
             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
               urgency === 'urgent' ? 'bg-red-100 text-red-600' :
@@ -314,19 +314,33 @@ export default function App({ stickerId }) {
 
   if (machineLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <IcoSpinner cls="w-8 h-8 text-blue-500 animate-spin" />
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-4">
+        <img src="/wac-logo.png" alt="WAC" className="w-14 h-14 rounded-2xl object-cover shadow-lg opacity-90" />
+        <div className="flex items-center gap-2.5">
+          <IcoSpinner cls="w-5 h-5 text-blue-400 animate-spin" />
+          <span className="text-slate-400 text-sm">A carregar dados da máquina…</span>
+        </div>
       </div>
     )
   }
 
   if (machineNotFound) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 text-center">
-        <img src="/wac-logo.png" alt="WAC" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-6 shadow-md" />
-        <h2 className="text-xl font-bold text-slate-800 mb-2">Sticker não registado</h2>
-        <p className="text-slate-500 text-sm max-w-xs">Este código QR ainda não está associado a nenhuma máquina. Contacte a equipa WAC.</p>
-        <p className="text-xs text-slate-400 font-mono mt-4">{stickerId}</p>
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-4 text-center">
+        <img src="/wac-logo.png" alt="WAC" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-6 shadow-md opacity-80" />
+        <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-4">
+          <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-white mb-2">Sticker não registado</h2>
+        <p className="text-slate-400 text-sm max-w-xs leading-relaxed">Este código QR ainda não está associado a nenhuma máquina. Contacte a equipa WAC.</p>
+        <p className="text-xs text-slate-600 font-mono mt-5 bg-slate-800 px-3 py-1.5 rounded-lg">{stickerId}</p>
+        <a href={`https://wa.me/${COMPANY.whatsapp}`} target="_blank" rel="noopener noreferrer"
+          className="mt-6 flex items-center gap-2 bg-[#25D366] hover:bg-[#1fba5a] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors">
+          <WhatsAppIcon cls="w-4 h-4" />
+          Contactar WAC
+        </a>
       </div>
     )
   }
@@ -339,6 +353,8 @@ export default function App({ stickerId }) {
         issueLabel={sentForm.issueLabel}
         operatorName={sentForm.operatorName}
         description={sentForm.description}
+        machineName={machine?.name}
+        stickerId={stickerId}
         onReset={() => {
           setSubmitted(false)
           setSentForm(null)
@@ -554,7 +570,7 @@ export default function App({ stickerId }) {
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
               <p className="text-sm font-bold text-slate-800 mb-1">Prefere contacto direto?</p>
               <p className="text-xs text-slate-400 mb-4">Fale connosco directamente sem preencher o formulário.</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <a
                   href={`https://wa.me/${COMPANY.whatsapp}?text=${encodeURIComponent('Olá! Preciso de suporte técnico para o equipamento ' + stickerId + ' — ' + machine.name)}`}
                   target="_blank"

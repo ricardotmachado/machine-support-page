@@ -377,48 +377,98 @@ export default function App({ stickerId }) {
     <div className="min-h-screen bg-slate-50">
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <div className="relative h-72 md:h-96 w-full overflow-hidden">
+      <div className="relative w-full overflow-hidden" style={{ minHeight: !imgError && machine.image ? undefined : 'auto' }}>
+
         {!imgError && machine.image ? (
-          <img
-            src={machine.image}
-            alt={machine.name}
-            className="w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
+          /* ── Photo hero ── */
+          <div className="h-72 md:h-96">
+            <img
+              src={machine.image}
+              alt={machine.name}
+              className="w-full h-full object-cover"
+              onError={() => setImgError(true)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/15" />
+          </div>
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-700 flex items-center justify-center">
-            <IcoWrench cls="w-16 h-16 text-slate-600" />
+          /* ── No-image hero — dark branded panel ── */
+          <div className="bg-[#080f1e] pt-16 pb-8 px-4">
+            {/* subtle dot grid */}
+            <svg className="absolute inset-0 w-full h-full opacity-[0.04] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="hero-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <circle cx="1" cy="1" r="1" fill="#ffffff" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#hero-dots)" />
+            </svg>
+            {/* blue glow */}
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 80% at 80% 50%, rgba(37,99,235,0.15) 0%, transparent 70%)' }} />
+
+            <div className="relative max-w-5xl mx-auto">
+              <p className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-3 opacity-80">Equipamento</p>
+              <h1 className="text-white text-3xl md:text-4xl font-extrabold leading-tight mb-3">{machine.name}</h1>
+
+              {/* Quick spec pills */}
+              <div className="flex flex-wrap gap-2 mb-5">
+                {machine.brand && (
+                  <span className="flex items-center gap-1.5 bg-white/5 border border-white/10 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-full">
+                    <IcoTag cls="w-3 h-3 text-blue-400" />{machine.brand}
+                  </span>
+                )}
+                {machine.model && (
+                  <span className="flex items-center gap-1.5 bg-white/5 border border-white/10 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-full">
+                    <IcoTag cls="w-3 h-3 text-blue-400" />{machine.model}
+                  </span>
+                )}
+                {machine.year && (
+                  <span className="flex items-center gap-1.5 bg-white/5 border border-white/10 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-full">
+                    <IcoCalendar cls="w-3 h-3 text-blue-400" />{machine.year}
+                  </span>
+                )}
+                {machine.location && (
+                  <span className="flex items-center gap-1.5 bg-white/5 border border-white/10 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-full">
+                    <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    {machine.location}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 text-slate-500 text-xs">
+                <span className="font-mono text-slate-400">{stickerId}</span>
+                {machine.client && <><span>·</span><span>{machine.client}</span></>}
+              </div>
+            </div>
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/15" />
-
-        {/* Top bar — constrained to same width as body */}
-        <div className="absolute top-0 left-0 right-0 pt-5">
+        {/* Top bar — overlaid for photo hero, absolute for both */}
+        <div className={`${!imgError && machine.image ? 'absolute top-0' : 'absolute top-0'} left-0 right-0 pt-5`}>
           <div className="max-w-5xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <img src="/wac-logo.png" alt="WAC" className="w-8 h-8 rounded-xl object-cover shadow-lg flex-shrink-0" />
               <div>
                 <p className="text-white text-xs font-semibold tracking-wide leading-none">{COMPANY.name}</p>
-                <p className="text-slate-400 text-[10px] mt-0.5 leading-none">{machine.location}</p>
+                {machine.location && <p className="text-slate-400 text-[10px] mt-0.5 leading-none">{machine.location}</p>}
               </div>
             </div>
             <StatusBadge status={machine.status} />
           </div>
         </div>
 
-        {/* Machine title — constrained to same width as body */}
-        <div className="absolute bottom-0 left-0 right-0 pb-6">
-          <div className="max-w-5xl mx-auto px-4">
-            <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1 opacity-80">Equipamento</p>
-            <h1 className="text-white text-3xl md:text-4xl font-bold leading-tight">{machine.name}</h1>
-            <p className="text-slate-400 text-xs mt-1.5">
-              <span className="font-mono">{stickerId}</span>
-              <span className="mx-1.5 opacity-40">·</span>
-              <span>{machine.client}</span>
-            </p>
+        {/* Machine title for photo hero only */}
+        {!imgError && machine.image && (
+          <div className="absolute bottom-0 left-0 right-0 pb-6">
+            <div className="max-w-5xl mx-auto px-4">
+              <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1 opacity-80">Equipamento</p>
+              <h1 className="text-white text-3xl md:text-4xl font-bold leading-tight">{machine.name}</h1>
+              <p className="text-slate-400 text-xs mt-1.5">
+                <span className="font-mono">{stickerId}</span>
+                {machine.client && <><span className="mx-1.5 opacity-40">·</span><span>{machine.client}</span></>}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ── BODY ─────────────────────────────────────────────────────── */}

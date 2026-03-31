@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 
 const COMPANY = {
   name: 'WAC - Equipamentos Industriais',
-  email: 'rui.freitas@wac.pt',
+  email: 'ricardojtmachado@hotmail.com',
   whatsapp: '351913882119',
 }
 

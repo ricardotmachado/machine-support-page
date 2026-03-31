@@ -434,18 +434,10 @@ export default function App({ stickerId }) {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 text-slate-500 text-xs mb-6">
+              <div className="flex items-center gap-2 text-slate-500 text-xs">
                 <span className="font-mono text-slate-400">{stickerId}</span>
                 {machine.client && <><span>·</span><span>{machine.client}</span></>}
               </div>
-
-              <a
-                href="#ocorrencia"
-                className="inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-lg shadow-blue-900/40"
-              >
-                <IcoSend cls="w-4 h-4" />
-                Abrir Ocorrência
-              </a>
             </div>
           </div>
         )}
@@ -467,22 +459,13 @@ export default function App({ stickerId }) {
         {/* Machine title for photo hero only */}
         {!imgError && machine.image && (
           <div className="absolute bottom-0 left-0 right-0 pb-6">
-            <div className="max-w-5xl mx-auto px-4 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1 opacity-80">Equipamento</p>
-                <h1 className="text-white text-3xl md:text-4xl font-bold leading-tight">{machine.name}</h1>
-                <p className="text-slate-400 text-xs mt-1.5">
-                  <span className="font-mono">{stickerId}</span>
-                  {machine.client && <><span className="mx-1.5 opacity-40">·</span><span>{machine.client}</span></>}
-                </p>
-              </div>
-              <a
-                href="#ocorrencia"
-                className="flex-shrink-0 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-900/40 mb-1"
-              >
-                <IcoSend cls="w-4 h-4" />
-                Abrir Ocorrência
-              </a>
+            <div className="max-w-5xl mx-auto px-4">
+              <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1 opacity-80">Equipamento</p>
+              <h1 className="text-white text-3xl md:text-4xl font-bold leading-tight">{machine.name}</h1>
+              <p className="text-slate-400 text-xs mt-1.5">
+                <span className="font-mono">{stickerId}</span>
+                {machine.client && <><span className="mx-1.5 opacity-40">·</span><span>{machine.client}</span></>}
+              </p>
             </div>
           </div>
         )}
@@ -504,7 +487,7 @@ export default function App({ stickerId }) {
           <div className="space-y-4">
 
             {/* Form card */}
-            <div id="ocorrencia" className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 scroll-mt-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
 
               <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
                 <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-sm shadow-blue-200">

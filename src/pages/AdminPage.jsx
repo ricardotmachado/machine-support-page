@@ -357,6 +357,8 @@ export default function AdminPage() {
 
   if (!authed) return <LoginScreen onLogin={login} />
 
+  const filteredOccurrences = occurrences.filter(o => occFilter === 'all' || o.status === occFilter)
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Toast */}
@@ -527,7 +529,6 @@ export default function AdminPage() {
             </div>
           </>
         )}
-      </div>
 
         {/* ── OCCURRENCES TAB ─────────────────────────────────────── */}
         {tab === 'occurrences' && !occDetail && (
@@ -572,9 +573,7 @@ export default function AdminPage() {
                 </svg>
                 <p className="text-slate-400 text-sm">A carregar ocorrências…</p>
               </div>
-            ) : (() => {
-              const filtered = occurrences.filter(o => occFilter === 'all' || o.status === occFilter)
-              if (filtered.length === 0) return (
+            ) : filteredOccurrences.length === 0 ? (
                 <div className="text-center py-20">
                   <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -584,10 +583,9 @@ export default function AdminPage() {
                   <p className="text-slate-700 font-semibold mb-1">Sem ocorrências</p>
                   <p className="text-slate-400 text-sm">Nenhuma ocorrência encontrada para este filtro.</p>
                 </div>
-              )
-              return (
+            ) : (
                 <div className="space-y-3">
-                  {filtered.map(o => {
+                  {filteredOccurrences.map(o => {
                     const urgencyStyle = {
                       urgent:   { bg: 'bg-red-50 border-red-200',    dot: 'bg-red-500',    text: 'text-red-700',    label: 'Urgente' },
                       medium:   { bg: 'bg-amber-50 border-amber-200', dot: 'bg-amber-500',  text: 'text-amber-700',  label: 'Média' },
@@ -630,8 +628,7 @@ export default function AdminPage() {
                     )
                   })}
                 </div>
-              )
-            })()}
+            )}
           </>
         )}
 

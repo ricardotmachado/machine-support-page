@@ -286,6 +286,7 @@ export default function AdminPage() {
   // ── Machines state ──
   const [machines, setMachines] = useState([])
   const [machinesLoading, setMachinesLoading] = useState(true)
+  const [machineSearch, setMachineSearch] = useState('')
   const [view, setView] = useState('list') // list | create | edit
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -359,6 +360,15 @@ export default function AdminPage() {
 
   const filteredOccurrences = occurrences.filter(o => occFilter === 'all' || o.status === occFilter)
 
+  const q = machineSearch.trim().toLowerCase()
+  const filteredMachines = q
+    ? machines.filter(m =>
+        m.client?.toLowerCase().includes(q) ||
+        m.name?.toLowerCase().includes(q) ||
+        m.location?.toLowerCase().includes(q)
+      )
+    : machines
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Toast */}
@@ -420,13 +430,36 @@ export default function AdminPage() {
         {/* ── MACHINES TAB ─────────────────────────────────────────── */}
         {tab === 'machines' && view === 'list' && (
           <>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h1 className="text-xl font-bold text-slate-900">Máquinas</h1>
               <button onClick={() => setView('create')}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors">
                 + Nova Máquina
               </button>
             </div>
+
+            {!machinesLoading && machines.length > 0 && (
+              <div className="relative mb-5">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                </svg>
+                <input
+                  type="text"
+                  value={machineSearch}
+                  onChange={e => setMachineSearch(e.target.value)}
+                  placeholder="Pesquisar por cliente, nome ou local…"
+                  className="w-full pl-9 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 transition-colors"
+                />
+                {machineSearch && (
+                  <button onClick={() => setMachineSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
 
             {machinesLoading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -450,9 +483,23 @@ export default function AdminPage() {
                   + Criar primeira máquina
                 </button>
               </div>
+            ) : filteredMachines.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                  </svg>
+                </div>
+                <p className="text-slate-700 font-semibold mb-1">Sem resultados</p>
+                <p className="text-slate-400 text-sm mb-4">Nenhuma máquina corresponde a "<span className="font-medium text-slate-600">{machineSearch}</span>".</p>
+                <button onClick={() => setMachineSearch('')}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors">
+                  Limpar pesquisa
+                </button>
+              </div>
             ) : (
               <div className="space-y-3">
-                {machines.map(m => {
+                {filteredMachines.map(m => {
                   const sticker = m.sticker_assignments?.[0]?.sticker_code
                   return (
                     <div key={m.id} className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow">

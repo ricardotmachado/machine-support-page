@@ -316,6 +316,7 @@ export default function AdminPage() {
   const [machines, setMachines] = useState([])
   const [machinesLoading, setMachinesLoading] = useState(true)
   const [machineSearch, setMachineSearch] = useState('')
+  const [clientFilter, setClientFilter] = useState('all')
   const [view, setView] = useState('list') // list | create | edit
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -419,14 +420,16 @@ export default function AdminPage() {
 
   const filteredOccurrences = occurrences.filter(o => occFilter === 'all' || o.status === occFilter)
 
+  const uniqueClients = [...new Set(machines.map(m => m.client).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+  const noQrCount = machines.filter(m => !m.sticker_assignments?.[0]?.sticker_code).length
+
   const q = machineSearch.trim().toLowerCase()
-  const filteredMachines = q
-    ? machines.filter(m =>
-        m.client?.toLowerCase().includes(q) ||
-        m.name?.toLowerCase().includes(q) ||
-        m.location?.toLowerCase().includes(q)
-      )
-    : machines
+  let filteredMachines = clientFilter !== 'all' ? machines.filter(m => m.client === clientFilter) : machines
+  if (q) filteredMachines = filteredMachines.filter(m =>
+    m.client?.toLowerCase().includes(q) ||
+    m.name?.toLowerCase().includes(q) ||
+    m.location?.toLowerCase().includes(q)
+  )
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -466,7 +469,7 @@ export default function AdminPage() {
               countLabel: 'abertas',
               icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> },
           ].map(t => (
-            <button key={t.key} onClick={() => { setTab(t.key); setView('list') }}
+            <button key={t.key} onClick={() => { setTab(t.key); setView('list'); setMachineSearch(''); setClientFilter('all') }}
               className={`flex items-center gap-2 px-4 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
                 tab === t.key
                   ? 'border-blue-600 text-blue-600'
@@ -498,26 +501,79 @@ export default function AdminPage() {
             </div>
 
             {!machinesLoading && machines.length > 0 && (
-              <div className="relative mb-5">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
-                </svg>
-                <input
-                  type="text"
-                  value={machineSearch}
-                  onChange={e => setMachineSearch(e.target.value)}
-                  placeholder="Pesquisar por cliente, nome ou local…"
-                  className="w-full pl-9 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 transition-colors"
-                />
-                {machineSearch && (
-                  <button onClick={() => setMachineSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+              <>
+                {/* Stats bar */}
+                <div className="grid grid-cols-3 gap-3 mb-5">
+                  <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm text-center">
+                    <p className="text-2xl font-bold text-slate-900">{uniqueClients.length}</p>
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">Empresas</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm text-center">
+                    <p className="text-2xl font-bold text-slate-900">{machines.length}</p>
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">Máquinas</p>
+                  </div>
+                  <div className={`rounded-xl border p-3 shadow-sm text-center ${noQrCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100'}`}>
+                    <p className={`text-2xl font-bold ${noQrCount > 0 ? 'text-amber-600' : 'text-slate-900'}`}>{noQrCount}</p>
+                    <p className={`text-xs font-medium mt-0.5 ${noQrCount > 0 ? 'text-amber-500' : 'text-slate-400'}`}>Sem QR</p>
+                  </div>
+                </div>
+
+                {/* Client filter pills */}
+                <div className="flex gap-2 overflow-x-auto pb-1 mb-3" style={{ scrollbarWidth: 'none' }}>
+                  <button
+                    onClick={() => setClientFilter('all')}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                      clientFilter === 'all'
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                    }`}>
+                    Todas
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${clientFilter === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                      {machines.length}
+                    </span>
                   </button>
-                )}
-              </div>
+                  {uniqueClients.map(client => {
+                    const count = machines.filter(m => m.client === client).length
+                    const active = clientFilter === client
+                    return (
+                      <button key={client}
+                        onClick={() => setClientFilter(active ? 'all' : client)}
+                        className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                          active
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                        }`}>
+                        {client}
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                          {count}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Search */}
+                <div className="relative mb-5">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={machineSearch}
+                    onChange={e => setMachineSearch(e.target.value)}
+                    placeholder={clientFilter !== 'all' ? `Pesquisar em ${clientFilter}…` : 'Pesquisar por nome, local…'}
+                    className="w-full pl-9 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 transition-colors"
+                  />
+                  {machineSearch && (
+                    <button onClick={() => setMachineSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </>
             )}
 
             {machinesLoading ? (
@@ -550,11 +606,18 @@ export default function AdminPage() {
                   </svg>
                 </div>
                 <p className="text-slate-700 font-semibold mb-1">Sem resultados</p>
-                <p className="text-slate-400 text-sm mb-4">Nenhuma máquina corresponde a "<span className="font-medium text-slate-600">{machineSearch}</span>".</p>
-                <button onClick={() => setMachineSearch('')}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-                  Limpar pesquisa
-                </button>
+                <p className="text-slate-400 text-sm mb-4">
+                  {machineSearch && clientFilter !== 'all'
+                    ? <>Nenhuma máquina de <span className="font-medium text-slate-600">{clientFilter}</span> corresponde a "<span className="font-medium text-slate-600">{machineSearch}</span>".</>
+                    : machineSearch
+                    ? <>Nenhuma máquina corresponde a "<span className="font-medium text-slate-600">{machineSearch}</span>".</>
+                    : <>Nenhuma máquina registada para <span className="font-medium text-slate-600">{clientFilter}</span>.</>
+                  }
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  {machineSearch && <button onClick={() => setMachineSearch('')} className="text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors">Limpar pesquisa</button>}
+                  {clientFilter !== 'all' && <button onClick={() => setClientFilter('all')} className="text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors">Ver todas as empresas</button>}
+                </div>
               </div>
             ) : (
               <div className="space-y-3">

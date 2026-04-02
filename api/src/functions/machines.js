@@ -65,6 +65,25 @@ app.http('updateMachine', {
   },
 })
 
+// DELETE /api/machines/delete/:id — delete machine
+app.http('deleteMachine', {
+  methods: ['DELETE'],
+  authLevel: 'anonymous',
+  route: 'machines/delete/{id}',
+  handler: async (request, context) => {
+    if (!isAdmin(request)) return forbidden()
+
+    const supabase = getClient()
+    const { error } = await supabase
+      .from('machines')
+      .delete()
+      .eq('id', request.params.id)
+
+    if (error) return { status: 500, jsonBody: { error: error.message } }
+    return { status: 200, jsonBody: { ok: true } }
+  },
+})
+
 // POST /api/stickers/assign — assign sticker code to machine
 app.http('assignSticker', {
   methods: ['POST'],

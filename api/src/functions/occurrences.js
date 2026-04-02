@@ -43,6 +43,25 @@ app.http('updateOccurrenceStatus', {
   },
 })
 
+// DELETE /api/occurrences/:id — delete occurrence
+app.http('deleteOccurrence', {
+  methods: ['DELETE'],
+  authLevel: 'anonymous',
+  route: 'occurrences/{id}',
+  handler: async (request, context) => {
+    if (!isAdmin(request)) return forbidden()
+
+    const supabase = getClient()
+    const { error } = await supabase
+      .from('occurrences')
+      .delete()
+      .eq('id', request.params.id)
+
+    if (error) return { status: 500, jsonBody: { error: error.message } }
+    return { status: 200, jsonBody: { ok: true } }
+  },
+})
+
 function isAdmin(request) {
   return request.headers.get('x-admin-token') === process.env.ADMIN_TOKEN
 }

@@ -180,9 +180,10 @@ function StatusPill({ status }) {
 
 // ── Occurrence Detail ────────────────────────────────────────────────────────
 
-function OccurrenceDetail({ occurrence: o, onBack, onStatusChange, updatingStatus }) {
+function OccurrenceDetail({ occurrence: o, onBack, onDelete, onStatusChange, updatingStatus, deleting }) {
   const [notes, setNotes] = useState(o.notes ?? '')
   const [status, setStatus] = useState(o.status)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const urgencyStyle = {
     urgent: { dot: 'bg-red-500', text: 'text-red-700', bg: 'bg-red-50 border-red-200', label: 'Urgente' },
@@ -271,6 +272,34 @@ function OccurrenceDetail({ occurrence: o, onBack, onStatusChange, updatingStatu
               {updatingStatus ? 'A guardar…' : 'Guardar alterações'}
             </button>
           </div>
+
+          {/* Delete zone */}
+          <div className="bg-white rounded-2xl border border-red-100 p-4 shadow-sm">
+            <h2 className="text-xs font-bold text-red-400 uppercase tracking-widest mb-3">Zona de perigo</h2>
+            {confirmDelete ? (
+              <div>
+                <p className="text-xs text-slate-600 mb-3">Esta ação é irreversível. Confirma que pretende eliminar esta ocorrência?</p>
+                <div className="flex gap-2">
+                  <button onClick={() => onDelete(o.id)} disabled={deleting}
+                    className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-2 rounded-xl text-sm transition-colors">
+                    {deleting ? 'A eliminar…' : 'Eliminar'}
+                  </button>
+                  <button onClick={() => setConfirmDelete(false)}
+                    className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold py-2 rounded-xl text-sm transition-colors">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmDelete(true)}
+                className="w-full flex items-center justify-center gap-2 border border-red-200 hover:bg-red-50 text-red-500 font-semibold py-2 rounded-xl text-sm transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Eliminar ocorrência
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -291,6 +320,8 @@ export default function AdminPage() {
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
   const [assigning, setAssigning] = useState(null)
+  const [deletingMachine, setDeletingMachine] = useState(null) // machine id awaiting confirmation
+  const [deleting, setDeleting] = useState(false)
 
   // ── Occurrences state ──
   const [occurrences, setOccurrences] = useState([])
@@ -342,6 +373,34 @@ export default function AdminPage() {
     if (res.ok) { await loadMachines(); setView('list'); showToast('✓ Máquina criada com sucesso!') }
     else showToast('Erro ao criar máquina.')
     setSaving(false)
+  }
+
+  async function handleDeleteMachine(id) {
+    setDeleting(true)
+    const res = await fetch(`/api/machines/delete/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-token': ADMIN_TOKEN },
+    })
+    if (res.ok) {
+      setMachines(prev => prev.filter(m => m.id !== id))
+      setDeletingMachine(null)
+      showToast('✓ Máquina eliminada.')
+    } else showToast('Erro ao eliminar máquina.')
+    setDeleting(false)
+  }
+
+  async function handleDeleteOccurrence(id) {
+    setDeleting(true)
+    const res = await fetch(`/api/occurrences/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-token': ADMIN_TOKEN },
+    })
+    if (res.ok) {
+      setOccurrences(prev => prev.filter(o => o.id !== id))
+      setOccDetail(null)
+      showToast('✓ Ocorrência eliminada.')
+    } else showToast('Erro ao eliminar ocorrência.')
+    setDeleting(false)
   }
 
   async function handleUpdate(form) {
@@ -527,14 +586,36 @@ export default function AdminPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <button onClick={() => setAssigning(m)}
-                            className="text-xs border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-                            {sticker ? 'Reatribuir QR' : 'Atribuir QR'}
-                          </button>
-                          <button onClick={() => { setEditing(m); setView('edit') }}
-                            className="text-xs bg-slate-900 hover:bg-slate-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                            Editar
-                          </button>
+                          {deletingMachine === m.id ? (
+                            <>
+                              <span className="text-xs text-slate-500 font-medium hidden sm:block">Eliminar?</span>
+                              <button onClick={() => handleDeleteMachine(m.id)} disabled={deleting}
+                                className="text-xs bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold px-3 py-1.5 rounded-lg transition-colors">
+                                {deleting ? '…' : 'Confirmar'}
+                              </button>
+                              <button onClick={() => setDeletingMachine(null)}
+                                className="text-xs border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                                Cancelar
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => setAssigning(m)}
+                                className="text-xs border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                                {sticker ? 'Reatribuir QR' : 'Atribuir QR'}
+                              </button>
+                              <button onClick={() => { setEditing(m); setView('edit') }}
+                                className="text-xs bg-slate-900 hover:bg-slate-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                                Editar
+                              </button>
+                              <button onClick={() => setDeletingMachine(m.id)}
+                                className="text-xs border border-red-200 hover:bg-red-50 text-red-500 font-semibold p-1.5 rounded-lg transition-colors">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -700,6 +781,8 @@ export default function AdminPage() {
               setUpdatingStatus(false)
             }}
             updatingStatus={updatingStatus}
+            onDelete={handleDeleteOccurrence}
+            deleting={deleting}
           />
         )}
 

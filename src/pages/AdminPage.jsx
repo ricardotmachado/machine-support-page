@@ -5,14 +5,18 @@ const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
+const ADMIN_USER = 'admin'
+const ADMIN_PASS = 'admin'
+
 function LoginScreen({ onLogin }) {
-  const [token, setToken] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (token === ADMIN_TOKEN) { onLogin(); setError('') }
-    else setError('Token inválido.')
+    if (username === ADMIN_USER && password === ADMIN_PASS) { onLogin(); setError('') }
+    else setError('Utilizador ou palavra-passe incorretos.')
   }
 
   return (
@@ -27,12 +31,24 @@ function LoginScreen({ onLogin }) {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs text-slate-400 font-semibold mb-1.5 uppercase tracking-wider">Token de Acesso</label>
+            <label className="block text-xs text-slate-400 font-semibold mb-1.5 uppercase tracking-wider">Utilizador</label>
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="admin"
+              autoComplete="username"
+              className="w-full bg-slate-700 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 font-semibold mb-1.5 uppercase tracking-wider">Palavra-passe</label>
             <input
               type="password"
-              value={token}
-              onChange={e => setToken(e.target.value)}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
+              autoComplete="current-password"
               className="w-full bg-slate-700 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {error && <p className="text-red-400 text-xs mt-1.5">{error}</p>}

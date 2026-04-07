@@ -31,7 +31,7 @@ export default function StickerPage({ onBack }) {
   const machine = DEMO_MACHINES.find(m => m.id === selected)
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-100 overflow-x-hidden">
 
       {/* ── Top bar ── */}
       <div className="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
@@ -130,13 +130,13 @@ export default function StickerPage({ onBack }) {
 
           {/* Single sticker preview */}
           <div className="print-area mb-8">
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 flex items-center justify-center shadow-sm">
+            <div className="bg-white rounded-2xl border border-slate-200 p-2 sm:p-8 flex items-center justify-center shadow-sm overflow-x-auto">
               <Sticker machine={machine} baseUrl={baseUrl} />
             </div>
           </div>
 
-          {/* Print sheet — 6 stickers per A4 page */}
-          <div className="no-print">
+          {/* Print sheet — 6 stickers per A4 page (hidden on mobile, desktop print tool) */}
+          <div className="no-print hidden sm:block">
             <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-4">
               Folha para impressão (6 etiquetas / A4)
             </p>
